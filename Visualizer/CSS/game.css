@@ -7,17 +7,28 @@
     display: flex;
     justify-content: center;
     padding-left: calc(var(--s) / 2)
+
 }
 
 #gamefield_external {
     height: 70vh;
     background: #00aacc;
-/*    background: url('../Images/textures/water.jpg')!important;*/
+    background: url('../Images/textures/water.jpg')!important;
 
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: -1.5em;
+    margin-top: 1.5em;
+}
+
+.hex-frame {
+    position: absolute;
+    top: -6em;
+    left: 7.5em;
+    width: 650px; /* Ajusta si tu #gamefield tiene otro ancho */
+    height: auto;
+    z-index: 3; /* Debe estar por debajo de nodos, caminos, etc., pero por encima del fondo */
+    pointer-events: none; /* Para que no bloquee clics */
 }
 
 /*********************************/
@@ -87,27 +98,27 @@
 
 .terrain_cereal {
     background: yellow!important;
-/*    background: url('../Images/textures/cereal.jpg')!important;*/
+    background: url('../Images/textures/trigo.png') center/cover no-repeat !important;
 }
 .terrain_mineral {
     background: darkgray!important;
-/*    background: url('../Images/textures/mountain.jpg')!important;*/
+    background: url('../Images/textures/piedra.png') center/cover no-repeat !important;
 }
 .terrain_clay {
     background: brown!important;
-/*    background: url('../Images/textures/quarry.jpg')!important;*/
+    background: url('../Images/textures/arcilla.png') center/cover no-repeat !important;
 }
 .terrain_wood {
     background: green!important;
-/*    background: url('../Images/textures/forest.jpg')!important;*/
+    background: url('../Images/textures/madera.png') center/cover no-repeat !important;
 }
 .terrain_wool {
     background: yellowgreen;
-/*    background: url('../Images/textures/wool.jpg')!important;*/
+    background: url('../Images/textures/oveja.png') center/cover no-repeat !important;
 }
 .terrain_desert {
     background: #f2e5c0!important;
-/*    background: url('../Images/textures/desert.jpg')!important;*/
+    background: url('../Images/textures/desierto.png') center/cover no-repeat !important;
 }
 .terrain_water {
     background: #00aacc!important;
