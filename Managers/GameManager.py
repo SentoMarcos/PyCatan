@@ -72,13 +72,9 @@ class GameManager:
                     if self.board.nodes[node]['player'] != -1:
                         player = self.agent_manager.players[self.board.nodes[node]['player']]
                         # Si tiene ciudad se dan 2 en lugar de 1 material
-
-                        if self.board.nodes[node]['has_city']:
-                            player['player'].hand.add_material(terrain['terrain_type'], 2)
-                            player['resources'].add_material(terrain['terrain_type'], 2)
-                        else:
-                            player['player'].hand.add_material(terrain['terrain_type'], 1)
-                            player['resources'].add_material(terrain['terrain_type'], 1)
+                        cantidad = 2 if self.board.nodes[node]['has_city'] else 1
+                        player['resources'].add_material(terrain['terrain_type'], cantidad)
+                        player['player'].hand = player['resources']
         return
 
     def _give_all_resources(self):
@@ -193,13 +189,14 @@ class GameManager:
             materials = ['cereal', 'mineral', 'clay', 'wood', 'wool']
 
             for i in range(len(materials)):
-                material_quantity = getattr(trade_offer.gives, materials[i])
-                giver['resources'].remove_material(i, material_quantity)  # Se resta lo que giver entrega
-                receiver['resources'].add_material(i, material_quantity)  # Se añade lo que receiver recibe del giver
-
-                material_quantity = getattr(trade_offer.receives, materials[i])
-                receiver['resources'].remove_material(i, material_quantity)  # Se resta lo que receiver entrega
-                giver['resources'].add_material(i, material_quantity)  # Se añade lo que giver recibe del receiver
+                material_quantity_gives = getattr(trade_offer.gives, materials[i])
+                material_quantity_receives = getattr(trade_offer.receives, materials[i])
+                # Giver da lo que ofrece
+                giver['resources'].remove_material(i, material_quantity_gives)
+                receiver['resources'].add_material(i, material_quantity_gives)
+                # Receiver da lo que ofrece a cambio
+                receiver['resources'].remove_material(i, material_quantity_receives)
+                giver['resources'].add_material(i, material_quantity_receives)
 
             giver['player'].hand = giver['resources']
             receiver['player'].hand = receiver['resources']
@@ -386,9 +383,10 @@ class GameManager:
 
                 self.board.nodes[node_id]['player'] = player
 
-                # Se le dan materiales al AgentManager y este a los agentes para que sepan cuantos tienen en realidad
-                self.agent_manager.players[player]['resources'].add_material(materials, 1)
-                self.agent_manager.players[player]['player'].hand = self.agent_manager.players[player]['resources']
+                # Solo se dan materiales en la segunda ronda de colocación (última de las 2 de inicio)
+                if self.turn_manager.round == 2:
+                    self.agent_manager.players[player]['resources'].add_material(materials, 1)
+                    self.agent_manager.players[player]['player'].hand = self.agent_manager.players[player]['resources']
 
                 self.agent_manager.players[player]['victory_points'] += 1
 
@@ -796,12 +794,17 @@ class GameManager:
         if self.last_dice_roll == 7:
             for obj in self.agent_manager.players:
                 if obj['resources'].get_total() > 7:
-                    total = obj['player'].on_having_more_than_7_materials_when_thief_is_called().get_total()
+                    total = obj['resources'].get_total()
                     max_hand = math.floor(total / 2)
-
+                    # Descarta hasta tener max_hand cartas
                     while total > max_hand:
-                        obj['resources'].remove_material(random.randint(0, 4), 1)
+                        # Elige aleatoriamente un material que tenga para descartar
+                        materiales_con_cartas = [i for i in range(5) if obj['resources'].get_from_id(i) > 0]
+                        if materiales_con_cartas:
+                            material_a_descartar = random.choice(materiales_con_cartas)
+                            obj['resources'].remove_material(material_a_descartar, 1)
                         total = obj['resources'].get_total()
+                    obj['player'].hand = obj['resources']
 
             on_moving_thief = self.agent_manager.players[player_id]['player'].on_moving_thief()
             move_thief_obj = self.move_thief(on_moving_thief['terrain'], on_moving_thief['player'])
