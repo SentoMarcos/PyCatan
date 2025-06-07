@@ -13,10 +13,10 @@ for i in range(100):
     random.seed(i)
     game_trace = game_director.game_start(i, False)
     game_hash = hash(json.dumps(game_trace)) # convert to string because dict is not hashable
-    with open(f'./../Tests/test_traces/game_{i}.json', 'r') as f:
+    with open(f'Tests/test_traces/game_{i}.json', 'r') as f:
         test_hash = hash(f.read())
         if game_hash != test_hash:
-            print('Game {i}: ERROR')
+            print(f'Game {i}: ERROR')
             break
-        
+    
     print(f'Game {i}: OK')

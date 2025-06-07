@@ -128,10 +128,10 @@ class Board:
 
         print('Terreno:')
         for terrain in self.terrain:
-            print(terrain[m]['id'])
-            print(terrain[m]['probability'])
-            print(terrain[m]['contacting_nodes'])
-            print(terrain[m]['terrain_type'])
+            print(terrain['id'])
+            print(terrain['probability'])
+            print(terrain['contacting_nodes'])
+            print(terrain['terrain_type'])
             print('---\n')
 
     def get_board(self):
@@ -288,13 +288,17 @@ class Board:
         :param finishing_node: Nodo al que llega la carretera. Debe ser adyacente
         :return: {bool, string}. Envía si se ha podido construir la carretera y en caso de no haberse podido el porqué
         """
+        # Si el nodo destino pertenece a otro jugador, no se puede construir
+        if self.nodes[end]['player'] not in [player, -1]:
+            return {'response': False, 'error_msg': 'No puedes construir una carretera en un nodo de otro jugador'}
         # Comprobamos si ya existe una carretera. Dado que las carreteras se registran en
         # ambas direcciones (como se puede ver al final de la función), solo es necesario
         # comprobar una de las dos direcciones
         already_built = any([road['node_id'] == end for road in self.nodes[start]['roads']])
-        if already_built:
+        already_built_reverse = any([road['node_id'] == start for road in self.nodes[end]['roads']])
+        # Si ya existe una carretera en cualquier sentido, no se puede construir
+        if already_built or already_built_reverse:
             return {'response': False, 'error_msg': 'Ya hay una carretera aquí'}
-
         # comprobamos si el jugador se puede conectar a la carretera, ya sea mediante otra carretera o
         # una ciudad o pueblo
         conected_road = any([road['player_id'] in [player] for road in self.nodes[start]['roads']])
@@ -302,7 +306,6 @@ class Board:
         if not (conected_road or player_owns_node):
             return {'response': False, 'error_msg': 'No puedes hacer una carretera aquí,' +
                         ' no hay una carretera, ciudad o pueblo adyacente que te pertenezca.'}
-
         self.nodes[start]['roads'].append({'player_id': player, 'node_id': end})
         self.nodes[end]['roads'].append({'player_id': player, 'node_id': start})
         return {'response': True, 'error_msg': ''}
