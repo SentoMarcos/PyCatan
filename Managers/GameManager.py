@@ -64,8 +64,8 @@ class GameManager:
         """
         # Por cada pieza de terreno en el tablero
         for terrain in self.board.terrain:
-            # Si la probabilidad coincide
-            if terrain['probability'] == self.last_dice_roll:
+            # Si la probabilidad coincide y NO hay ladrón
+            if terrain['probability'] == self.last_dice_roll and not terrain.get('has_thief', False):
                 # Se miran los nodos adyacentes
                 for node in terrain['contacting_nodes']:
                     # Si tiene jugador, implica que hay pueblo
@@ -266,6 +266,10 @@ class GameManager:
                                                                                     ], 1)
                 self.agent_manager.players[player_id]['player'].hand = self.agent_manager.players[player_id]['resources']
 
+            # Actualiza la carretera más larga tras cada construcción exitosa
+            if build_road_obj['response']:
+                self.update_longest_road()
+
             return build_road_obj
         else:
             return {'response': False, 'error_msg': 'Falta de materiales'}
@@ -434,40 +438,36 @@ class GameManager:
         card_obj = {}
 
         if card in self.agent_manager.players[player_id]['development_cards'].hand:
+            # Solo se puede jugar una carta de desarrollo por turno (excepto puntos de victoria)
+            if self.already_played_development_card and card.type != DevelopmentCardConstants.VICTORY_POINT:
+                card_obj['played_card'] = 'none'
+                card_obj['reason'] = 'Ya se ha jugado una carta de desarrollo este turno'
+                return card_obj, winner
             if card.type != DevelopmentCardConstants.VICTORY_POINT:
                 self.agent_manager.players[player_id]['development_cards'].delete_card(card)  # Borramos la carta
-
                 self.agent_manager.players[player_id]['player'].development_cards_hand.hand = \
                     self.agent_manager.players[player_id]['development_cards'].hand
-
         else:
             self.agent_manager.players[player_id]['player'].development_cards_hand.hand = \
                 self.agent_manager.players[player_id]['development_cards'].hand  # Hacen trampas
-
             card_obj['played_card'] = 'none'
             card_obj['reason'] = 'Trying to use cards they don\'t have'
-
             return card_obj, winner
 
         if card.type == DevelopmentCardConstants.KNIGHT:
-            # se le suma un nuevo caballero al jugador y se le pide mover al ladrón
             self.agent_manager.players[player_id]['knights'] += 1
-
+            # Solo cambia el título si supera, no si iguala
             if self.agent_manager.players[player_id]['knights'] > self.largest_army:
-                if self.largest_army_player == {}:
-                    # Definimos el nuevo poseedor con el ejército más grande
-                    self.largest_army_player = self.agent_manager.players[player_id]
-                    self.largest_army_player['largest_army'] = 1
-                    self.largest_army_player['victory_points'] += 2
-                else:
-                    # Le quitamos los beneficios al anterior poseedor del ejército grande
-                    self.largest_army_player['largest_army'] = 0
-                    self.largest_army_player['victory_points'] -= 2
-
-                    # Definimos el nuevo poseedor con el ejército más grande
-                    self.largest_army_player = self.agent_manager.players[player_id]
-                    self.largest_army_player['largest_army'] = 1
-                    self.largest_army_player['victory_points'] += 2
+                self.largest_army = self.agent_manager.players[player_id]['knights']
+                if self.largest_army_player == {} or self.largest_army_player.get('player', -1) != player_id:
+                    # Quita el título al anterior
+                    if self.largest_army_player and 'largest_army' in self.largest_army_player:
+                        self.largest_army_player['largest_army'] = 0
+                        self.largest_army_player['victory_points'] -= 2
+                    # Da el título al nuevo
+                    self.largest_army_player = {'player': player_id, 'largest_army': 1}
+                    self.agent_manager.players[player_id]['largest_army'] = 1
+                    self.agent_manager.players[player_id]['victory_points'] += 2
 
             on_moving_thief = self.agent_manager.players[player_id]['player'].on_moving_thief()
             move_thief_obj = self.move_thief(on_moving_thief['terrain'], on_moving_thief['player'])
@@ -935,3 +935,36 @@ class GameManager:
         else:
             build_phase_object['building'] = 'None'
             return build_phase_object, winner
+
+    def update_longest_road(self):
+        """
+        Recalcula y actualiza la carretera más larga tras cada construcción de carretera.
+        """
+        player_longest = [0] * len(self.agent_manager.players)
+        for idx, player in enumerate(self.agent_manager.players):
+            for node in self.board.nodes:
+                if node['player'] == idx:
+                    obj = self.longest_road_calculator(node, 1, {'longest_road': 0, 'player': idx}, idx, [node['id']])
+                    if obj['longest_road'] > player_longest[idx]:
+                        player_longest[idx] = obj['longest_road']
+        max_length = max(player_longest)
+        current_holder = self.longest_road['player']
+        candidates = [i for i, l in enumerate(player_longest) if l == max_length]
+        print(f"DEBUG longest_road: player_longest={player_longest}, max_length={max_length}, current_holder={current_holder}, candidates={candidates}")
+        if max_length < 5:
+            self.set_longest_road({'longest_road': 4, 'player': -1})
+        else:
+            # Si el actual poseedor no está entre los empatados, el primero en conseguirlo lo obtiene
+            if current_holder not in candidates:
+                self.set_longest_road({'longest_road': max_length, 'player': candidates[0]})
+            # Si hay empate y el actual poseedor está entre los empatados, el título permanece con él
+            else:
+                self.longest_road['longest_road'] = max_length
+        # Actualiza el estado de los jugadores
+        for idx, player in enumerate(self.agent_manager.players):
+            player['longest_road'] = 1 if idx == self.longest_road['player'] else 0
+            # Ajusta puntos de victoria si es necesario
+            if player['longest_road'] == 1 and player['victory_points'] < 2:
+                player['victory_points'] += 2
+            elif player['longest_road'] == 0 and player['victory_points'] >= 2:
+                player['victory_points'] -= 2
