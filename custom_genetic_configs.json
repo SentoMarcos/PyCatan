@@ -1,0 +1,41 @@
+{
+  "early_game_specialist": {
+    "description": "Especialista en juego temprano",
+    "genes": [
+      4.0,
+      3.5,
+      12.0,
+      1.0,
+      0.8,
+      0.2,
+      1.0
+    ],
+    "strategy": "Maximiza colocación inicial y construcción rápida"
+  },
+  "late_game_specialist": {
+    "description": "Especialista en juego tardío",
+    "genes": [
+      2.5,
+      2.0,
+      8.0,
+      2.0,
+      0.2,
+      0.9,
+      1.8
+    ],
+    "strategy": "Enfoque en cartas de desarrollo y control del ladrón"
+  },
+  "port_master": {
+    "description": "Maestro de puertos comerciales",
+    "genes": [
+      3.0,
+      4.0,
+      18.0,
+      1.5,
+      0.6,
+      0.5,
+      1.0
+    ],
+    "strategy": "Monopoliza puertos para ventaja comercial"
+  }
+}

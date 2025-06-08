@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Catán UI</title>
+  <link rel="stylesheet" href="CSS/prueba.css">
+  <link rel="stylesheet" href="CSS/tablero.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="JS/jugadores.js" defer></script>
+  <script src="JS/controles.js" defer></script>
+  <script src="JS/tablero.js" defer></script>
+  <script src="JS/general_prueba.js" defer></script>
+</head>
+<body>  <!-- Sidebar -->
+  <div class="sidebar-transition sidebar-closed" id="sidebar">
+    <div class="header">Log del Juego</div>
+    <div class="content">
+      <div id="commerce_log" style="height: 30vh; margin-bottom: 10px;">
+        <div id="commerce_log_title" style="font-weight: bold; margin-bottom: 5px;">Comercios</div>
+        <div id="commerce_log_text" style="height: 25vh; overflow-y: auto; border: 1px solid #ccc; padding: 5px; font-size: 12px;"></div>
+      </div>
+      <div id="other_useful_info" style="height: 30vh;">
+        <div id="other_useful_info_title" style="font-weight: bold; margin-bottom: 5px;">Otra información útil</div>
+        <div id="other_useful_info_text" style="height: 25vh; overflow-y: auto; border: 1px solid #ccc; padding: 5px; font-size: 12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón de toggle -->
+  <button id="toggleButton" onclick="toggleSidebar()">⮞</button>
+
+  <!-- Contenido principal -->
+  <div class="main-container">
+    <div class="gamefield" id="gamefield">
+      <!-- Contenedor del tablero -->
+      <div class="board-container">
+        <div id="board">
+          <!-- El overlay ahora está dentro del board -->
+          <div id="overlay"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="players" id="playersContainer"></div>
+
+    <div class="controls">
+      <button id="ronda_previa_btn"><i class="fa-solid fa-angles-left" title="Ronda Anterior"></i></button>
+      <button id="turno_previo_btn"><i class="fa-solid fa-angle-left" title="Turno Anterior"></i></button>
+      <button id="play_btn"><i class="fa-solid fa-play" title="Play"></i></button>
+      <input id="millis_for_play" type="range" min="10" max="1000" value="25" class="slider" style="width: 50px;">
+      <button id="fase_siguiente_btn"><i class="fa-solid fa-forward-step" title="Fase Siguiente"></i></button>
+      <button id="turno_siguiente_btn"><i class="fa-solid fa-angle-right" title="Turno Siguiente"></i></button>
+      <button id="ronda_siguiente_btn"><i class="fa-solid fa-angles-right" title="Ronda Siguiente"></i></button>
+      <button id="load_game"><i class="fa-solid fa-ellipsis-vertical" title="Cargar Partida"></i></button>
+      <input type="file" id="get_file" accept=".json" style="display: none;">
+    </div>
+  </div>
+</body>
+</html>
